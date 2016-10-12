@@ -61,12 +61,25 @@ function gauss_seidel!{T}( A :: SparseMatrixCSC{T}
     x
 end
 
-function weighted_jacobi!(A :: SparseMatrixCSC, x :: Vector, b :: Vector, weight = 2/3) :: Vector{T}
+"""
+In place version of `weighted_jacobi`.
+"""
+function weighted_jacobi!{T}( A :: SparseMatrixCSC{T}
+                            , x :: Vector{T}
+                            , b :: Vector{T}
+                            , weight = 2/3
+                            ) :: Vector{T}
     Di = spdiagm(map(x -> 1/x, diag(A)))
     R = A - spdiagm(diag(A))
     x[:] = weight * Di * (b - R*x) + (1 - weight) * x
 end
 
+"""
+    weighted_jacobi(A::SparseMatrixCSC, x::Vector, b::Vector, weight = 2/3)
+
+Return a vector that is the result of applying one iteration of Jacobi smoothing to
+`Ax=b`. This iteration is equivalent to `wD(b - R*x) + (1-w)x` where `D` is the inverse diagonal and `R` is `A` without its diagonal.
+"""
 function weighted_jacobi{T}( A :: SparseMatrixCSC{T}
                            , x :: Vector{T}
                            , b :: Vector{T}
