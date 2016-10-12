@@ -42,10 +42,11 @@ function gauss_seidel!{T}( A :: SparseMatrixCSC{T}
         diag :: T = 0
 
         js = nzrange(A, col)
-        if backwards
-            js = reverse(js) # js is range, reverse is cheap
-        end
-        @inbounds for j in js
+        # hack to avoid allocating
+        start = backwards ? js.stop : js.start
+        stop = backwards ? js.start : js.stop
+        step = backwards ? -1 : 1
+        @inbounds for j in start:step:stop
             row = rows[j]
             val = vals[j]
             if row != col
