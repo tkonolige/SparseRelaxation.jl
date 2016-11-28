@@ -22,10 +22,10 @@ function conv_test(smoother)
 end
 
 @testset "gauss_seidel forwards" begin
-    conv_test((A,x,b)->gauss_seidel(A,x,b,false))
+    conv_test((A,x,b)->gauss_seidel(A,x,b,backwards=false))
 end
 @testset "gauss_seidel backwards" begin
-    conv_test((A,x,b)->gauss_seidel(A,x,b,true))
+    conv_test((A,x,b)->gauss_seidel(A,x,b,backwards=true))
 end
 @testset "weighted_jacobi" begin
     conv_test(weighted_jacobi)

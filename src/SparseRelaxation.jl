@@ -7,7 +7,7 @@ export gauss_seidel, gauss_seidel!, weighted_jacobi!, weighted_jacobi
 # TODO: how to improve locality
 # order is different than it should be?
 """
-    gauss_seidel(A::SparseMatrixCSC, x::Vector, b::Vector, backwards::Bool = false)
+    gauss_seidel(A::SparseMatrixCSC, x::Vector, b::Vector; backwards::Bool = false, iterations = 1)
 
 Return a vector that is the result of applying one iteration of Gauss Seidel to
 `Ax=b`. This iteration is equivalent to `L(b - Ux)` where `L` is the lower
@@ -17,10 +17,11 @@ triangular part of `A` and `U` is the strictly upper triangular part of `A`. If
 function gauss_seidel{T}( A :: SparseMatrixCSC{T}
                         , x :: Vector{T}
                         , b :: Vector{T}
-                        , backwards :: Bool = false
+                        ; backwards :: Bool = false
+                        , iterations :: Int = 1
                         ) :: Vector{T}
     x_new = copy(x)
-    gauss_seidel!(A, x_new, b, backwards)
+    gauss_seidel!(A, x_new, b, backwards=backwards, iterations=iterations)
     x_new
 end
 
@@ -32,7 +33,8 @@ In place, more efficient version of `gauss_seidel(A, x, b)`.
 function gauss_seidel!{T}( A :: SparseMatrixCSC{T}
                          , x :: Vector{T}
                          , b :: Vector{T}
-                         , backwards::Bool = false
+                         ; backwards :: Bool = false
+                         , iterations :: Int = 1
                          ) :: Vector{T}
     rows = rowvals(A)
     vals = nonzeros(A)
@@ -68,15 +70,20 @@ In place version of `weighted_jacobi`.
 function weighted_jacobi!{T}( A :: SparseMatrixCSC{T}
                             , x :: Vector{T}
                             , b :: Vector{T}
-                            , weight = 2/3
+                            ; weight :: T = 2/3
+                            , iterations :: Int = 1
                             ) :: Vector{T}
     Di = spdiagm(map(x -> 1/x, diag(A)))
     R = A - spdiagm(diag(A))
-    x[:] = weight * Di * (b - R*x) + (1 - weight) * x
+    for i in 1:iterations
+        x[:] = weight * Di * (b - R*x) + (1 - weight) * x
+    end
+
+    x
 end
 
 """
-    weighted_jacobi(A::SparseMatrixCSC, x::Vector, b::Vector, weight = 2/3)
+    weighted_jacobi(A::SparseMatrixCSC, x::Vector, b::Vector; weight = 2/3, iterations = 1)
 
 Return a vector that is the result of applying one iteration of Jacobi smoothing to
 `Ax=b`. This iteration is equivalent to `wD(b - R*x) + (1-w)x` where `D` is the inverse diagonal and `R` is `A` without its diagonal.
@@ -84,10 +91,11 @@ Return a vector that is the result of applying one iteration of Jacobi smoothing
 function weighted_jacobi{T}( A :: SparseMatrixCSC{T}
                            , x :: Vector{T}
                            , b :: Vector{T}
-                           , weight = 2/3
+                           ; weight :: T = 2/3
+                           , iterations :: Int = 1
                            ) :: Vector{T}
     x_new = copy(x)
-    weighted_jacobi!(A, x_new, b, weight)
+    weighted_jacobi!(A, x_new, b, weight=weight, iterations=iterations)
     x_new
 end
 
